@@ -1,0 +1,295 @@
+from tkinter import *
+from tkinter.ttk import Combobox
+from tkinter.font import Font
+import sqlite3
+import tkinter.messagebox
+import random
+import linecache
+
+
+#Tkinter window
+
+root=Tk()                               
+
+
+#Sqlote variables
+Name=StringVar()
+Address=StringVar()
+Type=IntVar()
+Mobile=IntVar()
+Email=StringVar()
+Cheese=IntVar()
+Quantity=IntVar()
+Pizza=StringVar()
+ID=IntVar()
+Cd=IntVar()
+
+
+#Tkinter window setting
+root.geometry("900x600+350+300")          
+root.title("Customer")
+myfont=Font(family="FreeMono",size=14)
+root.resizable(width=False, height=False)
+
+#Background image
+pic=PhotoImage(file="pizza.png")
+frame1=Frame(root)
+frame1.pack()
+k=Label(frame1,image=pic)
+k.pack()
+
+p=["Onion","Capcium","Veg Loaded","Chicago","Sicilian","Greek","Margheritta","Farm House"]
+
+#show pricelist
+
+def pric():
+
+    x=Tk()
+    x.resizable(width=False, height=False)
+
+
+    Label(x,text="Onion  -  small=60, medium=105, large=150",font=myfont).pack()
+    Label(x,text="Capcium - small=70, medium=115, large=160",font=myfont).pack()
+    Label(x,text="Veg loaded - small=130, medium=175, large=220",font=myfont).pack()
+    Label(x,text="Chicago - small=250, medium=295, large=345",font=myfont).pack()
+    Label(x,text="Sicilian  - small=200, medium=245, large=290",font=myfont).pack()
+    Label(x,text="Greek  -  small=345, medium=390, large=335",font=myfont).pack()
+    Label(x,text="Margeritta - small=90, medium=135, large=180",font=myfont).pack()
+    Label(x,text="*25 Rs Extra for cheese",font=myfont).pack()
+    x.mainloop()
+
+
+
+#for cancel pizza order
+
+def cancel():
+    
+    k=0
+
+    iid=Cd.get()
+    con=sqlite3.connect("newpizza.db")
+    c=con.execute("select ID from newp where ID=(?)",(iid,))
+    
+    for i in c:
+    
+        u=i[0]
+                
+        if(iid!=u):
+             
+            k=1;
+                
+ 
+    if(k==0):
+     
+          tkinter.messagebox.showerror('cancel order','No user exit with this ID')
+          
+    if(k==1):
+    
+
+       con.execute("delete from newp where ID=(?)",(iid,))
+       m=open('co.txt','w')
+       m.write("order id: ")
+       m.write(str(iid))
+       m.close()
+
+       tkinter.messagebox.showinfo('Cancel','Order canceled')
+ 
+       con.commit()
+    
+
+#for placing order
+
+
+   
+def order():
+        
+
+
+        line=random.randrange(10000,50000)
+
+    
+
+    
+    
+        name=Name.get()
+        add=Address.get()
+        piz=Type.get()
+        mob=Mobile.get()
+        email=Email.get()
+        cheese=Cheese.get()
+        quantity=Quantity.get()
+        pizza=Pizza.get()
+        Id=line
+
+        #for calculating cost
+
+        if(pizza=="Onion"):
+            price=60
+        elif(pizza=="Capcium"):
+            price=70
+        elif(pizza=="Veg Loaded"):
+            price=130
+        elif(pizza=="Chicago"):
+            price=250
+        elif(pizza=="Sicilian"):
+            price=200
+        elif(pizza=="Greek"):
+            price=345
+        elif(pizza=="Margeritta"):
+            price=90
+        else:
+            price=400
+
+
+
+        if(piz==1):
+           price=price
+        elif(piz==2):
+           price=price+45
+        else:
+           price=price+90
+
+
+        if(cheese==1):
+           price=price+25
+        else:
+           price=price
+
+        price=price*quantity
+
+        price=str(price)
+
+        tkinter.messagebox.showinfo("Price",'Order cost:'+price)
+
+
+
+    
+        f=open('npo.txt','w')
+        f.write(name)
+        f.write("\n")
+        f.write(str(piz))
+        f.write("\n")
+        f.write(add)
+        f.write("\n")
+        f.write(str(cheese))
+        f.write("\n")
+        f.write(str(quantity))
+        f.write("\n")
+        f.write(pizza)
+        f.close()
+
+        #For storing user data in database
+        
+        con=sqlite3.connect("newpizza.db")
+        con.execute("create table newp(ID text primary key,Name varchar(30),Address text,Pizza varchar(20),Type text,Mobile text,Email text,Cheese text,Quantity text);")
+        con.execute("insert into newp(Id,Name,Address,Pizza,Type,Mobile,Email,Cheese,Quantity)values(?,?,?,?,?,?,?,?,?)",(Id,name,add,pizza,piz,mob,email,cheese,quantity))
+
+        c=con.execute("select * from newp")
+        for i in c:
+                 
+                 idd=i[0]
+                 idd=str(idd)
+                 
+
+        tkinter.messagebox.showinfo('Order ID','Order ID='+idd)
+        con.commit()
+
+    
+
+#tracking user order
+
+def trac():
+
+    
+    
+    k=1
+    ed=Cd.get()
+    
+    con=sqlite3.connect("newpizza.db")
+    
+    c=con.execute("select ID from newp where ID=(?)",(ed,))
+    
+    for i in c:
+
+        u=i[0]
+                
+        if(ed!=u):
+             
+            k=0;
+                
+ 
+    if(k==0):
+     
+      r=open('track.txt','r')
+      tr=random.randrange(0,20)
+      li=linecache.getline('track.txt',tr)
+      li=str(li)
+    
+      tkinter.messagebox.showinfo('track order',li)
+    if(k==1):
+        
+      tkinter.messagebox.showerror('track order','No user exist with this ID')
+        
+
+
+
+
+
+#track order
+
+
+
+Label(root,text="Track order or Cancel order",font=myfont).place(x=600,y=10)
+Label(root,fg="black",text="Order ID",height=1,font="times 12").place(x=550,y=100)
+Entry(root,textvar=Cd).place(x=650,y=100)
+Button(root,text="Track Order",bg="green",height=1,cursor='circle',fg="black",font="times 12",command=trac).place(x=600,y=150)
+Button(root,text='Cancel Order',bg='lightgreen',cursor='circle',font="times 12",command=cancel).place(x=700,y=150)
+
+
+
+#new order
+
+
+
+Label(root,text="Order pizza",font=myfont).place(x=100,y=10)
+
+    
+Label(root,text="Name",font=myfont).place(x=5,y=100)
+Entry(root,textvar=Name).place(x=120,y=100)
+
+Label(root,text="Address",font=myfont).place(x=5,y=150)
+Entry(root,textvar=Address).place(x=120,y=150)
+
+Label(root,text="Pizza Type",font=myfont).place(x=5,y=200)
+L=Combobox(root,values=p,width=18,textvar=Pizza).place(x=120,y=200)
+
+Button(root,text="Price List",command=pric,font="times 12",bg="lightblue").place(x=300,y=200)
+
+Label(root,text="Pizza Size:",font=myfont).place(x=5,y=250)
+Radiobutton(root,text="Small",variable=Type,value=1).place(x=130,y=250)
+Radiobutton(root,text="Medium",variable=Type,value=2).place(x=200,y=250)
+Radiobutton(root,text="Large",variable=Type,value=3).place(x=280,y=250)
+
+Label(root,text="Extra Cheeese",font=myfont).place(x=5,y=300)
+Checkbutton(root,text="Yes",variable=Cheese,onvalue=1).place(x=150,y=300)
+Checkbutton(root,text="No",variable=Cheese,onvalue=2).place(x=250,y=300)
+
+Label(root,text="Quantity",font=myfont).place(x=5,y=350)
+Spinbox(root,from_=0,to=10,textvar=Quantity).place(x=120,y=350)
+
+
+Label(root,text="Mobile No.",font=myfont).place(x=5,y=400)
+Entry(root,textvar=Mobile).place(x=120,y=400)
+
+Label(root,text="Email ID",font=myfont).place(x=5,y=450)
+Entry(root,textvar=Email).place(x=120,y=450)
+
+Button(root,text="Submit",font="times 12",activeforeground="white",command=order,bg="lightblue").place(x=75,y=500)
+    
+
+
+
+root.mainloop()
+
+
+
